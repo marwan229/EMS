@@ -1,0 +1,3505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMS Model 3 - Enhanced Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --battery: #9b59b6;
+            --fuel-cell: #1abc9c;
+            --solar: #f1c40f;
+            --wind: #3498db;
+            --grid: #e67e22;
+            --cost: #27ae60;
+            --carbon: #16a085;
+            --maintenance: #8e44ad;
+            --load: #e84393;
+            --pricing: #d35400;
+            --demand: #c0392b;
+            --efficiency: #2980b9;
+            --response: #8e44ad;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .datetime {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+        }
+        
+        .time {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-title i {
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+        
+        .nav-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+        }
+        
+        .nav-item:hover {
+            background: var(--light);
+            transform: translateX(5px);
+        }
+        
+        .nav-item.active {
+            background: var(--secondary);
+            color: white;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .card-action {
+            background: var(--light);
+            border: none;
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .card-action:hover {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .col-span-2 {
+            grid-column: span 2;
+        }
+        
+        .col-span-3 {
+            grid-column: span 3;
+        }
+        
+        .col-span-4 {
+            grid-column: span 4;
+        }
+        
+        .col-span-5 {
+            grid-column: span 5;
+        }
+        
+        .col-span-6 {
+            grid-column: span 6;
+        }
+        
+        .col-span-7 {
+            grid-column: span 7;
+        }
+        
+        .col-span-8 {
+            grid-column: span 8;
+        }
+        
+        .col-span-9 {
+            grid-column: span 9;
+        }
+        
+        .col-span-12 {
+            grid-column: span 12;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .metric {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .metric:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .metric-trend {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .trend-up {
+            color: var(--success);
+        }
+        
+        .trend-down {
+            color: var(--accent);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 10px;
+        }
+        
+        .chart-container-sm {
+            position: relative;
+            height: 200px;
+            margin-top: 10px;
+        }
+        
+        .chart-container-xs {
+            position: relative;
+            height: 150px;
+            margin-top: 10px;
+        }
+        
+        .system-diagram {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        
+        .diagram-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 800px;
+        }
+        
+        .energy-source-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        .source {
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 15px;
+            color: white;
+            font-weight: 500;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .source:hover {
+            transform: scale(1.05);
+        }
+        
+        .source.wind {
+            background: var(--wind);
+        }
+        
+        .source.fuel-cell {
+            background: var(--fuel-cell);
+        }
+        
+        .source.solar {
+            background: var(--solar);
+        }
+        
+        .source-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .source-value {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            background: rgba(0,0,0,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .power-flow-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .flow-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: var(--light);
+            border-radius: 10px;
+            margin: 0 10px;
+            min-height: 150px;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .flow-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .flow-arrow {
+            font-size: 2rem;
+            color: #95a5a6;
+            margin: 0 10px;
+        }
+        
+        .flow-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .flow-details {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        
+        .battery-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .battery-level {
+            width: 100px;
+            height: 200px;
+            border: 3px solid var(--dark);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            background: #f1f2f6;
+        }
+        
+        .battery-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--battery);
+            transition: height 1s ease;
+        }
+        
+        .battery-percent {
+            margin-top: 10px;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .battery-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        
+        .battery-stat {
+            text-align: center;
+        }
+        
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .security-metric {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .security-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .threat-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .threat-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .threat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .threat-level {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .threat-mitigated {
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        .threat-details {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: var(--secondary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-danger {
+            background: var(--accent);
+        }
+        
+        .btn-cost {
+            background: var(--cost);
+        }
+        
+        .btn-carbon {
+            background: var(--carbon);
+        }
+        
+        .btn-load {
+            background: var(--load);
+        }
+        
+        .btn-pricing {
+            background: var(--pricing);
+        }
+        
+        .btn-demand {
+            background: var(--demand);
+        }
+        
+        .btn-efficiency {
+            background: var(--efficiency);
+        }
+        
+        .btn-response {
+            background: var(--response);
+        }
+        
+        .alert-bar {
+            background: var(--accent);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+        
+        .alert-message {
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-message i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .alert-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: background 0.3s;
+        }
+        
+        .log-entry:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .log-time {
+            color: #3498db;
+            margin-right: 10px;
+        }
+        
+        .log-info {
+            color: #2ecc71;
+        }
+        
+        .log-warning {
+            color: #f39c12;
+        }
+        
+        .log-error {
+            color: #e74c3c;
+        }
+        
+        .log-maintenance {
+            color: #9b59b6;
+        }
+        
+        .status-indicators {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            background: var(--light);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+        
+        .status-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: var(--success);
+        }
+        
+        .status-warning {
+            background: var(--warning);
+        }
+        
+        .status-offline {
+            background: var(--accent);
+        }
+        
+        .maintenance-alert {
+            background: var(--maintenance);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s;
+        }
+        
+        .maintenance-alert:hover {
+            transform: translateX(5px);
+        }
+        
+        .maintenance-message {
+            display: flex;
+            align-items: center;
+        }
+        
+        .maintenance-message i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .maintenance-schedule {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .maintenance-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .maintenance-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .cost-metric {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .cost-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--cost);
+        }
+        
+        .carbon-metric {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .carbon-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--carbon);
+        }
+        
+        .forecast-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .forecast-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--light);
+            flex: 1;
+            margin: 0 5px;
+            transition: transform 0.3s;
+        }
+        
+        .forecast-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .forecast-time {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .forecast-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .weather-container {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .weather-icon {
+            font-size: 3rem;
+            margin-right: 15px;
+            color: var(--secondary);
+        }
+        
+        .weather-details {
+            flex: 1;
+        }
+        
+        .weather-temp {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .weather-desc {
+            color: #7f8c8d;
+        }
+        
+        .map-container {
+            height: 300px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .map-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            background: linear-gradient(45deg, #ecf0f1 25%, #dde4e6 25%, #dde4e6 50%, #ecf0f1 50%, #ecf0f1 75%, #dde4e6 75%, #dde4e6 100%);
+            background-size: 20px 20px;
+        }
+        
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .health-metric {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .health-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .health-bar {
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .health-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .dropdown-content a {
+            color: var(--dark);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: var(--light);
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .tab-container {
+            margin-top: 15px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab-btn {
+            padding: 10px 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            border-bottom: 3px solid var(--secondary);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            padding: 15px 0;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .animated-progress {
+            animation: progressAnimation 1s ease-in-out;
+        }
+        
+        @keyframes progressAnimation {
+            0% { width: 0%; }
+            100% { width: actual-value; }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #ccc;
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .live-badge {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-left: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .pricing-table th, .pricing-table td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .pricing-table th {
+            background-color: var(--light);
+            font-weight: 600;
+        }
+        
+        .pricing-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .current-rate {
+            background-color: rgba(231, 76, 60, 0.1);
+            font-weight: 600;
+        }
+        
+        .comparison-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            margin-top: 15px;
+            gap: 10px;
+            justify-content: space-around;
+        }
+        
+        .comparison-bar {
+            flex: 1;
+            background: var(--light);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            transition: height 0.5s;
+        }
+        
+        .comparison-bar-label {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        
+        .comparison-bar-value {
+            position: absolute;
+            top: -25px;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .efficiency-metric {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .efficiency-label {
+            width: 120px;
+            font-size: 0.9rem;
+        }
+        
+        .efficiency-bar-container {
+            flex: 1;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .efficiency-bar {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        .efficiency-value {
+            width: 50px;
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .response-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--light);
+            border-radius: 8px;
+        }
+        
+        .response-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .response-details {
+            flex: 1;
+        }
+        
+        .response-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .response-desc {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .response-action {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .response-action:hover {
+            background: var(--primary);
+        }
+        
+        @media (max-width: 1600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                grid-template-columns: repeat(9, 1fr);
+            }
+            
+            .col-span-3, .col-span-4 {
+                grid-column: span 3;
+            }
+            
+            .col-span-6, .col-span-8, .col-span-12 {
+                grid-column: span 9;
+            }
+            
+            .threat-matrix {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .col-span-3, .col-span-4 {
+                grid-column: span 3;
+            }
+            
+            .col-span-6, .col-span-8, .col-span-12 {
+                grid-column: span 6;
+            }
+            
+            .threat-matrix {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .col-span-3, .col-span-4, .col-span-6, .col-span-8, .col-span-12 {
+                grid-column: span 3;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .security-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .health-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .col-span-3, .col-span-4, .col-span-6, .col-span-8, .col-span-12 {
+                grid-column: span 1;
+            }
+            
+            .threat-matrix {
+                grid-template-columns: 1fr;
+            }
+            
+            .energy-source-row {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .source {
+                margin: 10px 0;
+            }
+            
+            .power-flow-row {
+                flex-direction: column;
+            }
+            
+            .flow-item {
+                margin: 10px 0;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+            
+            .status-indicators {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .datetime {
+                position: relative;
+                top: 0;
+                right: 0;
+                text-align: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Energy Management System - Model 3</h1>
+            <p class="subtitle">AI-Based Energy Management with LSTM Forecasting and Fuzzy Logic Optimization</p>
+            <div class="datetime">
+                <div class="time" id="current-time">10:45:32</div>
+                <div class="date" id="current-date">Monday, June 12, 2023</div>
+            </div>
+        </header>
+
+        <div class="status-indicators">
+            <div class="status-item">
+                <div class="status-dot status-online"></div>
+                <span>EMS Online</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot status-online"></div>
+                <span>Grid Connected</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot status-warning"></div>
+                <span>Battery: 65%</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot status-online"></div>
+                <span>Energy Cost: $0.12/kWh</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot status-online"></div>
+                <span>CO2 Saved: 245 kg today</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot status-online"></div>
+                <span>Peak Demand: 78%</span>
+            </div>
+        </div>
+
+        <div class="alert-bar">
+            <div class="alert-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Warning: Wind turbine output has dropped below expected levels.</span>
+            </div>
+            <button class="alert-close">&times;</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="sidebar">
+                <div class="sidebar-title">
+                    <i class="fas fa-bolt"></i> EMS Model 3
+                </div>
+                <div class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-sliders-h"></i> Control Panel
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-shield-alt"></i> Security
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-battery-full"></i> Battery Management
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-solar-panel"></i> Renewable Sources
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-bolt"></i> Grid Interface
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i> Cost Analysis
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-leaf"></i> Environmental Impact
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-tools"></i> Maintenance
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cogs"></i> System Settings
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-history"></i> Historical Data
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-exclamation-triangle"></i> Alerts & Logs
+                    <span class="notification-badge">3</span>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <!-- Existing cards remain unchanged -->
+                <div class="card col-span-3">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-sun"></i> PV System</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pv-gauge"></canvas>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Current Output</div>
+                            <div class="metric-value">18.2 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 2.3%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Efficiency</div>
+                            <div class="metric-value">94.5%</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 0.5%</div>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'pv-details')">Details</button>
+                            <button class="tab-btn" onclick="openTab(event, 'pv-history')">History</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="pv-details" class="tab-pane active">
+                                <p>Temperature: 42°C</p>
+                                <p>Irradiance: 820 W/m²</p>
+                                <p>Peak Today: 19.1 kW</p>
+                            </div>
+                            <div id="pv-history" class="tab-pane">
+                                <p>Today: 128 kWh</p>
+                                <p>This Week: 842 kWh</p>
+                                <p>This Month: 3.2 MWh</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-span-3">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-wind"></i> Wind System</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="wind-gauge"></canvas>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Current Output</div>
+                            <div class="metric-value">15.7 kW</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 3.1%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Efficiency</div>
+                            <div class="metric-value">91.2%</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 1.2%</div>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'wind-details')">Details</button>
+                            <button class="tab-btn" onclick="openTab(event, 'wind-history')">History</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="wind-details" class="tab-pane active">
+                                <p>Wind Speed: 12.4 m/s</p>
+                                <p>Turbine RPM: 1,240</p>
+                                <p>Peak Today: 17.8 kW</p>
+                            </div>
+                            <div id="wind-history" class="tab-pane">
+                                <p>Today: 98 kWh</p>
+                                <p>This Week: 652 kWh</p>
+                                <p>This Month: 2.4 MWh</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-span-3">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-battery-full"></i> Fuel Cell</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="fc-gauge"></canvas>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Current Output</div>
+                            <div class="metric-value">19.8 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 0.5%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Efficiency</div>
+                            <div class="metric-value">55.3%</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> 0.0%</div>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'fc-details')">Details</button>
+                            <button class="tab-btn" onclick="openTab(event, 'fc-history')">History</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="fc-details" class="tab-pane active">
+                                <p>Hydrogen Flow: 12.4 L/min</p>
+                                <p>Stack Temp: 68°C</p>
+                                <p>Peak Today: 20.2 kW</p>
+                            </div>
+                            <div id="fc-history" class="tab-pane">
+                                <p>Today: 142 kWh</p>
+                                <p>This Week: 924 kWh</p>
+                                <p>This Month: 3.8 MWh</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-span-3">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-battery-half"></i> Battery System</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="battery-status">
+                        <div class="battery-level">
+                            <div class="battery-fill" style="height: 65%;"></div>
+                        </div>
+                        <div class="battery-percent">65%</div>
+                        <div class="battery-stats">
+                            <div class="battery-stat">
+                                <div>200V</div>
+                                <div class="metric-label">Voltage</div>
+                            </div>
+                            <div class="battery-stat">
+                                <div>50Ah</div>
+                                <div class="metric-label">Capacity</div>
+                            </div>
+                            <div class="battery-stat">
+                                <div>25°C</div>
+                                <div class="metric-label">Temperature</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'battery-details')">Details</button>
+                            <button class="tab-btn" onclick="openTab(event, 'battery-health')">Health</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="battery-details" class="tab-pane active">
+                                <p>State of Health: 92%</p>
+                                <p>Cycles: 1,243</p>
+                                <p>Last Full Charge: 12 hours ago</p>
+                            </div>
+                            <div id="battery-health" class="tab-pane">
+                                <p>Internal Resistance: 12 mΩ</p>
+                                <p>Capacity Retention: 94%</p>
+                                <p>Projected Lifespan: 7.2 years</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-span-8">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-line"></i> Power Generation Trends</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                            <div class="dropdown">
+                                <button class="card-action"><i class="fas fa-history"></i></button>
+                                <div class="dropdown-content">
+                                    <a href="#">Last Hour</a>
+                                    <a href="#">Last 6 Hours</a>
+                                    <a href="#">Last 24 Hours</a>
+                                    <a href="#">Last Week</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="power-trend-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-bolt"></i> Grid Interface</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Grid Voltage</div>
+                            <div class="metric-value">63.5 kV</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> Stable</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Grid Frequency</div>
+                            <div class="metric-value">50.0 Hz</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> Stable</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Power Import</div>
+                            <div class="metric-value">22.3 kW</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 5.2%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Power Export</div>
+                            <div class="metric-value">0.0 kW</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> No export</div>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'grid-details')">Details</button>
+                            <button class="tab-btn" onclick="openTab(event, 'grid-quality')">Quality</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="grid-details" class="tab-pane active">
+                                <p>Power Factor: 0.97</p>
+                                <p>Harmonic Distortion: 2.8%</p>
+                                <p>Transformer Load: 78%</p>
+                            </div>
+                            <div id="grid-quality" class="tab-pane">
+                                <p>Voltage THD: 2.1%</p>
+                                <p>Current THD: 3.4%</p>
+                                <p>Frequency Deviation: ±0.05 Hz</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Real-time Energy Pricing Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> Real-time Energy Pricing</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Current Rate</div>
+                            <div class="metric-value">$0.12/kWh</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 2.3%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Peak Rate</div>
+                            <div class="metric-value">$0.28/kWh</div>
+                            <div class="metric-trend">Starts 16:00</div>
+                        </div>
+                    </div>
+                    <table class="pricing-table">
+                        <thead>
+                            <tr>
+                                <th>Time Period</th>
+                                <th>Rate ($/kWh)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Off-Peak (00:00-06:00)</td>
+                                <td>0.08</td>
+                                <td>Completed</td>
+                            </tr>
+                            <tr>
+                                <td>Shoulder (06:00-14:00)</td>
+                                <td>0.12</td>
+                                <td class="current-rate">Current</td>
+                            </tr>
+                            <tr>
+                                <td>Peak (14:00-20:00)</td>
+                                <td>0.28</td>
+                                <td>Upcoming</td>
+                            </tr>
+                            <tr>
+                                <td>Shoulder (20:00-24:00)</td>
+                                <td>0.15</td>
+                                <td>Later</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="chart-container-xs">
+                        <canvas id="pricing-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- New Peak Demand Forecasting Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-line"></i> Peak Demand Forecasting</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Current Load</div>
+                            <div class="metric-value">78%</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 5.2%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Next Peak</div>
+                            <div class="metric-value">16:30</div>
+                            <div class="metric-trend">Expected 92%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-xs">
+                        <canvas id="demand-forecast-chart"></canvas>
+                    </div>
+                    <div class="forecast-container">
+                        <div class="forecast-item">
+                            <div class="forecast-time">Next Hour</div>
+                            <div class="forecast-value">82%</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">4 Hours</div>
+                            <div class="forecast-value">92%</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">8 Hours</div>
+                            <div class="forecast-value">74%</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">Tomorrow</div>
+                            <div class="forecast-value">88%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Energy Storage Optimization Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-battery-three-quarters"></i> Storage Optimization</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Optimal SOC</div>
+                            <div class="metric-value">75%</div>
+                            <div class="metric-trend">For peak shaving</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Economic Value</div>
+                            <div class="metric-value">$42.50</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 8.7%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-xs">
+                        <canvas id="storage-optimization-chart"></canvas>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'storage-strategy')">Strategy</button>
+                            <button class="tab-btn" onclick="openTab(event, 'storage-economics')">Economics</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="storage-strategy" class="tab-pane active">
+                                <p>Charge during off-peak: 00:00-06:00</p>
+                                <p>Discharge during peak: 14:00-20:00</p>
+                                <p>Reserve for outages: 20%</p>
+                            </div>
+                            <div id="storage-economics" class="tab-pane">
+                                <p>Daily savings: $12.40</p>
+                                <p>Monthly ROI: 8.2%</p>
+                                <p>Payback period: 3.2 years</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> Energy Cost Analysis</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="cost-grid">
+                        <div class="cost-metric">
+                            <div class="metric-label">Current Energy Cost</div>
+                            <div class="cost-value">$0.12/kWh</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 2.3%</div>
+                        </div>
+                        <div class="cost-metric">
+                            <div class="metric-label">Today's Cost</div>
+                            <div class="cost-value">$42.50</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 8.7%</div>
+                        </div>
+                        <div class="cost-metric">
+                            <div class="metric-label">Monthly Forecast</div>
+                            <div class="cost-value">$1,280</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 3.5%</div>
+                        </div>
+                        <div class="cost-metric">
+                            <div class="metric-label">Savings vs Grid Only</div>
+                            <div class="cost-value">$320</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 12.1%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-sm">
+                        <canvas id="cost-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- New Equipment Efficiency Metrics Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-tachometer-alt"></i> Equipment Efficiency</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="efficiency-metric">
+                        <div class="efficiency-label">Inverter</div>
+                        <div class="efficiency-bar-container">
+                            <div class="efficiency-bar" style="width: 96%; background: var(--success);"></div>
+                        </div>
+                        <div class="efficiency-value">96%</div>
+                    </div>
+                    <div class="efficiency-metric">
+                        <div class="efficiency-label">Transformer</div>
+                        <div class="efficiency-bar-container">
+                            <div class="efficiency-bar" style="width: 92%; background: var(--success);"></div>
+                        </div>
+                        <div class="efficiency-value">92%</div>
+                    </div>
+                    <div class="efficiency-metric">
+                        <div class="efficiency-label">Charge Controller</div>
+                        <div class="efficiency-bar-container">
+                            <div class="efficiency-bar" style="width: 94%; background: var(--success);"></div>
+                        </div>
+                        <div class="efficiency-value">94%</div>
+                    </div>
+                    <div class="efficiency-metric">
+                        <div class="efficiency-label">VSC System</div>
+                        <div class="efficiency-bar-container">
+                            <div class="efficiency-bar" style="width: 89%; background: var(--warning);"></div>
+                        </div>
+                        <div class="efficiency-value">89%</div>
+                    </div>
+                    <div class="chart-container-xs">
+                        <canvas id="efficiency-chart"></canvas>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'efficiency-trends')">Trends</button>
+                            <button class="tab-btn" onclick="openTab(event, 'efficiency-maintenance')">Maintenance</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="efficiency-trends" class="tab-pane active">
+                                <p>Monthly average: 92.8%</p>
+                                <p>YTD improvement: 2.3%</p>
+                                <p>Target: 95%</p>
+                            </div>
+                            <div id="efficiency-maintenance" class="tab-pane">
+                                <p>VSC inspection due in 14 days</p>
+                                <p>Transformer service: 45 days</p>
+                                <p>Inverter firmware update available</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Demand Response Status Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-exchange-alt"></i> Demand Response</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="response-status">
+                        <div class="response-icon" style="background: var(--success);">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="response-details">
+                            <div class="response-title">Program Active</div>
+                            <div class="response-desc">Enrolled in GridFlex DR program</div>
+                        </div>
+                        <button class="response-action">Details</button>
+                    </div>
+                    <div class="response-status">
+                        <div class="response-icon" style="background: var(--warning);">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="response-details">
+                            <div class="response-title">Load Flexibility</div>
+                            <div class="response-desc">8.7 kW available for shedding</div>
+                        </div>
+                        <button class="response-action">Manage</button>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">DR Events This Month</div>
+                            <div class="metric-value">2</div>
+                            <div class="metric-trend">3.2 kW avg reduction</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Incentives Earned</div>
+                            <div class="metric-value">$145</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 18%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-xs">
+                        <canvas id="demand-response-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-leaf"></i> Carbon Footprint</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="cost-grid">
+                        <div class="carbon-metric">
+                            <div class="metric-label">CO2 Saved Today</div>
+                            <div class="carbon-value">245 kg</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 15.2%</div>
+                        </div>
+                        <div class="carbon-metric">
+                            <div class="metric-label">Equivalent Trees</div>
+                            <div class="carbon-value">12</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 2.3%</div>
+                        </div>
+                        <div class="carbon-metric">
+                            <div class="metric-label">Monthly CO2 Reduction</div>
+                            <div class="carbon-value">7.2 t</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 8.7%</div>
+                        </div>
+                        <div class="carbon-metric">
+                            <div class="metric-label">Carbon Intensity</div>
+                            <div class="carbon-value">128 g/kWh</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 5.4%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-sm">
+                        <canvas id="carbon-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Enhanced Renewable Energy Integration Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-solar-panel"></i> Renewable Integration</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Renewable %</div>
+                            <div class="metric-value">64.2%</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 3.2%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Self-Consumption</div>
+                            <div class="metric-value">78.5%</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 2.1%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Curtailment</div>
+                            <div class="metric-value">2.4%</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 0.8%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Grid Feed-in</div>
+                            <div class="metric-value">15.3 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 5.7%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-sm">
+                        <canvas id="renewable-integration-chart"></canvas>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'renewable-details')">Details</button>
+                            <button class="tab-btn" onclick="openTab(event, 'renewable-forecast')">Forecast</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="renewable-details" class="tab-pane active">
+                                <p>PV Self-Consumption: 82%</p>
+                                <p>Wind Self-Consumption: 74%</p>
+                                <p>FC Utilization: 92%</p>
+                            </div>
+                            <div id="renewable-forecast" class="tab-pane">
+                                <p>Tomorrow's Renewable Forecast: 68%</p>
+                                <p>Weekly Average: 62%</p>
+                                <p>Monthly Target: 70%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Power Quality Analysis Card -->
+                <div class="card col-span-4">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-wave-square"></i> Power Quality Analysis</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Voltage THD</div>
+                            <div class="metric-value">2.1%</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> Within limits</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Current THD</div>
+                            <div class="metric-value">3.4%</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 0.2%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Power Factor</div>
+                            <div class="metric-value">0.97</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> Optimal</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Voltage Deviation</div>
+                            <div class="metric-value">1.8%</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> Normal</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-sm">
+                        <canvas id="power-quality-chart"></canvas>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'quality-metrics')">Metrics</button>
+                            <button class="tab-btn" onclick="openTab(event, 'quality-events')">Events</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="quality-metrics" class="tab-pane active">
+                                <p>Frequency Stability: 49.98-50.02 Hz</p>
+                                <p>Voltage Sags: 2 this month</p>
+                                <p>Transients: 0 this month</p>
+                            </div>
+                            <div id="quality-events" class="tab-pane">
+                                <p>Last Sag: 2 days ago (-8.2%, 120ms)</p>
+                                <p>Last Swell: 12 days ago (+6.5%, 80ms)</p>
+                                <p>Last Interruption: 45 days ago (2.3s)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Historical Performance Card -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> Historical Performance</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                            <div class="dropdown">
+                                <button class="card-action"><i class="fas fa-calendar"></i></button>
+                                <div class="dropdown-content">
+                                    <a href="#">Last 7 Days</a>
+                                    <a href="#">Last 30 Days</a>
+                                    <a href="#">Last Quarter</a>
+                                    <a href="#">Last Year</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="historical-chart"></canvas>
+                    </div>
+                    <div class="comparison-chart" id="historical-comparison">
+                        <div class="comparison-bar" style="height: 70%; background: var(--wind);">
+                            <div class="comparison-bar-value">70%</div>
+                            <div class="comparison-bar-label">Last Week</div>
+                        </div>
+                        <div class="comparison-bar" style="height: 78%; background: var(--solar);">
+                            <div class="comparison-bar-value">78%</div>
+                            <div class="comparison-bar-label">This Week</div>
+                        </div>
+                        <div class="comparison-bar" style="height: 65%; background: var(--fuel-cell);">
+                            <div class="comparison-bar-value">65%</div>
+                            <div class="comparison-bar-label">Last Month</div>
+                        </div>
+                        <div class="comparison-bar" style="height: 72%; background: var(--carbon);">
+                            <div class="comparison-bar-value">72%</div>
+                            <div class="comparison-bar-label">This Month</div>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'historical-efficiency')">Efficiency</button>
+                            <button class="tab-btn" onclick="openTab(event, 'historical-cost')">Cost</button>
+                            <button class="tab-btn" onclick="openTab(event, 'historical-reliability')">Reliability</button>
+                        </div>
+                        <div class="tab-content">
+                            <div id="historical-efficiency" class="tab-pane active">
+                                <p>System efficiency improved by 5.2% YoY</p>
+                                <p>Renewable utilization up 8.7% from last quarter</p>
+                                <p>Energy losses reduced by 2.3% from last month</p>
+                            </div>
+                            <div id="historical-cost" class="tab-pane">
+                                <p>Energy cost reduced by 12.4% YoY</p>
+                                <p>Operational savings: $3,240 this year</p>
+                                <p>ROI on upgrades: 14.8% annually</p>
+                            </div>
+                            <div id="historical-reliability" class="tab-pane">
+                                <p>Uptime: 99.92% (vs 99.85% last year)</p>
+                                <p>Outage duration reduced by 42% YoY</p>
+                                <p>Maintenance costs down 8.3% from last quarter</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-tools"></i> Predictive Maintenance</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="maintenance-alert">
+                        <div class="maintenance-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Wind turbine bearing requires inspection</span>
+                        </div>
+                        <div class="maintenance-schedule">
+                            <button class="maintenance-btn">Schedule</button>
+                            <button class="maintenance-btn">Info</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-alert" style="background: #f39c12;">
+                        <div class="maintenance-message">
+                            <i class="fas fa-info-circle"></i>
+                            <span>PV panel cleaning recommended in 12 days</span>
+                        </div>
+                        <div class="maintenance-schedule">
+                            <button class="maintenance-btn">Schedule</button>
+                            <button class="maintenance-btn">Info</button>
+                        </div>
+                    </div>
+                    <div class="health-grid">
+                        <div class="health-metric">
+                            <div class="metric-label">System Health</div>
+                            <div class="health-value">92%</div>
+                            <div class="health-bar">
+                                <div class="health-fill" style="width: 92%; background: var(--success);"></div>
+                            </div>
+                        </div>
+                        <div class="health-metric">
+                            <div class="metric-label">PV Health</div>
+                            <div class="health-value">96%</div>
+                            <div class="health-bar">
+                                <div class="health-fill" style="width: 96%; background: var(--success);"></div>
+                            </div>
+                        </div>
+                        <div class="health-metric">
+                            <div class="metric-label">Wind Health</div>
+                            <div class="health-value">84%</div>
+                            <div class="health-bar">
+                                <div class="health-fill" style="width: 84%; background: var(--warning);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container-sm">
+                        <canvas id="maintenance-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-line"></i> Energy Forecast <span class="live-badge"></span></h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="forecast-chart"></canvas>
+                    </div>
+                    <div class="forecast-container">
+                        <div class="forecast-item">
+                            <div class="forecast-time">Next Hour</div>
+                            <div class="forecast-value">54.2 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 3.2%</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">4 Hours</div>
+                            <div class="forecast-value">58.7 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 8.1%</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">8 Hours</div>
+                            <div class="forecast-value">48.3 kW</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 5.7%</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">24 Hours</div>
+                            <div class="forecast-value">52.4 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 2.3%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-cloud-sun"></i> Weather Conditions</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="weather-container">
+                        <div class="weather-icon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="weather-details">
+                            <div class="weather-temp">23°C</div>
+                            <div class="weather-desc">Sunny with clear skies</div>
+                            <div class="metric-trend">Wind: 12 km/h • Humidity: 45%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="weather-chart"></canvas>
+                    </div>
+                    <div class="forecast-container">
+                        <div class="forecast-item">
+                            <div class="forecast-time">Now</div>
+                            <div class="forecast-value"><i class="fas fa-sun"></i> 23°</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">1h</div>
+                            <div class="forecast-value"><i class="fas fa-sun"></i> 24°</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">2h</div>
+                            <div class="forecast-value"><i class="fas fa-cloud-sun"></i> 25°</div>
+                        </div>
+                        <div class="forecast-item">
+                            <div class="forecast-time">4h</div>
+                            <div class="forecast-value"><i class="fas fa-cloud"></i> 23°</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-shield-alt"></i> Security Status</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="security-grid">
+                        <div class="security-metric">
+                            <div class="metric-label">Threat Detection Rate</div>
+                            <div class="security-value">100%</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> No threats</div>
+                        </div>
+                        <div class="security-metric">
+                            <div class="metric-label">Avg Processing Time</div>
+                            <div class="security-value">0.45ms</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 0.02ms</div>
+                        </div>
+                    </div>
+                    <h4 style="margin-top: 15px;">Threat Matrix</h4>
+                    <div class="threat-matrix">
+                        <div class="threat-item">
+                            <div class="threat-level">Replay Attacks</div>
+                            <div class="threat-mitigated">MITIGATED</div>
+                            <div class="threat-details">0.12ms response</div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level">Device Spoofing</div>
+                            <div class="threat-mitigated">MITIGATED</div>
+                            <div class="threat-details">0.08ms response</div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level">Data Injection</div>
+                            <div class="threat-mitigated">MITIGATED</div>
+                            <div class="threat-details">0.34ms response</div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level">DoS Attacks</div>
+                            <div class="threat-mitigated">MITIGATED</div>
+                            <div class="threat-details">1.0s recovery</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-list-alt"></i> System Log <span class="live-badge"></span></h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="log-container">
+                        <div class="log-entry">
+                            <span class="log-time">10:45:32</span>
+                            <span class="log-info">System operating normally. All parameters within range.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">10:42:18</span>
+                            <span class="log-warning">Wind speed decreased. Output reduced by 3.1%.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">10:40:05</span>
+                            <span class="log-info">PV output increased due to improved irradiance.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">10:38:22</span>
+                            <span class="log-maintenance">Predictive maintenance: Wind turbine bearing inspection recommended.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">10:35:57</span>
+                            <span class="log-info">Fuel cell stack efficiency optimized.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">10:32:44</span>
+                            <span class="log-info">Grid synchronization maintained. Frequency stable.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">10:30:00</span>
+                            <span class="log-info">Security scan completed. No threats detected.</span>
+                        </div>
+                    </div>
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="openTab(event, 'all-logs')">All</button>
+                            <button class="tab-btn" onclick="openTab(event, 'warnings')">Warnings</button>
+                            <button class="tab-btn" onclick="openTab(event, 'errors')">Errors</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-plug"></i> Load Management</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="load-chart"></canvas>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Critical Loads</div>
+                            <div class="metric-value">12.4 kW</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 62%; background: var(--success);"></div>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Non-Critical Loads</div>
+                            <div class="metric-value">8.7 kW</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 43.5%; background: var(--warning);"></div>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Deferrable Loads</div>
+                            <div class="metric-value">5.2 kW</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 26%; background: var(--accent);"></div>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Sheddable Loads</div>
+                            <div class="metric-value">3.8 kW</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 19%; background: var(--grid);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-balance-scale"></i> Energy Distribution</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="distribution-chart"></canvas>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-label">Renewable %</div>
+                            <div class="metric-value">64.2%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 64.2%; background: var(--success);"></div>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Fuel Cell %</div>
+                            <div class="metric-value">24.7%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 24.7%; background: var(--fuel-cell);"></div>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Grid Import %</div>
+                            <div class="metric-value">11.1%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 11.1%; background: var(--grid);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-12">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-map-marked-alt"></i> Energy Distribution Map</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="map-container">
+                        <div class="map-placeholder">
+                            <div>
+                                <i class="fas fa-map-marked-alt" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                                <p>Interactive Energy Distribution Map</p>
+                                <p style="font-size: 0.8rem;">Showing real-time power flow across the network</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr); margin-top: 15px;">
+                        <div class="metric">
+                            <div class="metric-label">North Sector Load</div>
+                            <div class="metric-value">24.3 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 3.2%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">South Sector Load</div>
+                            <div class="metric-value">18.7 kW</div>
+                            <div class="metric-trend trend-down"><i class="fas fa-arrow-down"></i> 1.8%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">East Sector Load</div>
+                            <div class="metric-value">15.2 kW</div>
+                            <div class="metric-trend trend-up"><i class="fas fa-arrow-up"></i> 2.4%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">West Sector Load</div>
+                            <div class="metric-value">22.8 kW</div>
+                            <div class="metric-trend"><i class="fas fa-minus"></i> Stable</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing cards continue... -->
+                <div class="card col-span-12">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-project-diagram"></i> Power Flow Diagram</h3>
+                        <div class="card-actions">
+                            <button class="card-action"><i class="fas fa-sync-alt"></i></button>
+                            <button class="card-action"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="system-diagram">
+                        <div class="diagram-container">
+                            <div class="energy-source-row">
+                                <div class="source wind">
+                                    <div class="source-icon"><i class="fas fa-wind"></i></div>
+                                    <div>Wind 20 kW</div>
+                                    <div class="source-value">15.7 kW</div>
+                                </div>
+                                <div class="source fuel-cell">
+                                    <div class="source-icon"><i class="fas fa-battery-full"></i></div>
+                                    <div>FC 20 kW</div>
+                                    <div class="source-value">19.8 kW</div>
+                                </div>
+                                <div class="source solar">
+                                    <div class="source-icon"><i class="fas fa-sun"></i></div>
+                                    <div>PV 20 kW</div>
+                                    <div class="source-value">18.2 kW</div>
+                                </div>
+                            </div>
+                            
+                            <div class="power-flow-row">
+                                <div class="flow-item">
+                                    <div class="flow-title">VSC Control</div>
+                                    <div class="flow-details">Voltage Source Converter with advanced control algorithms</div>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                                <div class="flow-item">
+                                    <div class="flow-title">3-Level NPC Inverter</div>
+                                    <div class="flow-details">Neutral Point Clamped inverter for efficient power conversion</div>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                                <div class="flow-item">
+                                    <div class="flow-title">Transformer</div>
+                                    <div class="flow-details">Three-phase transformer with delta-delta configuration</div>
+                                </div>
+                            </div>
+                            
+                            <div class="power-flow-row">
+                                <div class="flow-item">
+                                    <div class="flow-title">AI-Based EMS</div>
+                                    <div class="flow-details">LSTM Forecasting + Fuzzy Logic Optimization</div>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-exchange-alt"></i></div>
+                                <div class="flow-item">
+                                    <div class="flow-title">Battery System</div>
+                                    <div class="battery-status">
+                                        <div class="battery-level">
+                                            <div class="battery-fill" style="height: 65%;"></div>
+                                        </div>
+                                        <div class="battery-percent">65%</div>
+                                    </div>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-exchange-alt"></i></div>
+                                <div class="flow-item">
+                                    <div class="flow-title">Grid Connection</div>
+                                    <div class="flow-details">63.5 kV, 50 Hz</div>
+                                    <div class="flow-details">Import: 22.3 kW</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="updateBatteryLevel(70)"><i class="fas fa-battery-full"></i> Simulate Charging</button>
+            <button class="btn" onclick="updateBatteryLevel(40)"><i class="fas fa-battery-quarter"></i> Simulate Discharging</button>
+            <button class="btn btn-warning" onclick="simulateFault()"><i class="fas fa-exclamation-triangle"></i> Simulate Fault</button>
+            <button class="btn btn-cost" onclick="simulateCostChange()"><i class="fas fa-money-bill-wave"></i> Simulate Price Change</button>
+            <button class="btn btn-carbon" onclick="simulateCarbonReduction()"><i class="fas fa-leaf"></i> Simulate Carbon Reduction</button>
+            <button class="btn btn-load" onclick="simulateLoadChange()"><i class="fas fa-plug"></i> Simulate Load Change</button>
+            <button class="btn btn-pricing" onclick="simulatePricingChange()"><i class="fas fa-chart-line"></i> Simulate Pricing</button>
+            <button class="btn btn-demand" onclick="simulateDemandChange()"><i class="fas fa-bolt"></i> Simulate Demand</button>
+            <button class="btn btn-efficiency" onclick="simulateEfficiencyChange()"><i class="fas fa-tachometer-alt"></i> Simulate Efficiency</button>
+            <button class="btn btn-response" onclick="simulateDREvent()"><i class="fas fa-exchange-alt"></i> Simulate DR Event</button>
+            <button class="btn" onclick="updateBatteryLevel(65)"><i class="fas fa-sync-alt"></i> Reset</button>
+        </div>
+    </div>
+
+    <script>
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+        }
+        
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Tab functionality
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tab-pane");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            
+            const tablinks = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Close alert functionality
+        document.querySelector('.alert-close').addEventListener('click', function() {
+            document.querySelector('.alert-bar').style.display = 'none';
+        });
+
+        // Initialize charts
+        const powerTrendCtx = document.getElementById('power-trend-chart').getContext('2d');
+        const powerTrendChart = new Chart(powerTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30', '10:35', '10:40', '10:45'],
+                datasets: [
+                    {
+                        label: 'PV Output',
+                        data: [16.8, 17.2, 17.5, 17.3, 17.6, 17.9, 18.0, 18.1, 18.2, 18.2],
+                        borderColor: '#f1c40f',
+                        backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Wind Output',
+                        data: [17.2, 16.8, 16.5, 16.2, 16.5, 16.3, 16.0, 15.8, 15.7, 15.7],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Fuel Cell Output',
+                        data: [19.5, 19.6, 19.6, 19.7, 19.7, 19.8, 19.8, 19.8, 19.8, 19.8],
+                        borderColor: '#1abc9c',
+                        backgroundColor: 'rgba(26, 188, 156, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Power Generation Trends (kW)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 15,
+                        title: {
+                            display: true,
+                            text: 'kW'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create gauge charts
+        function createGauge(chartId, value, max, color) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [value, max - value],
+                        backgroundColor: [color, '#ecf0f1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%',
+                    rotation: -90,
+                    circumference: 180,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize gauge charts
+        const pvGauge = createGauge('pv-gauge', 18.2, 20, '#f1c40f');
+        const windGauge = createGauge('wind-gauge', 15.7, 20, '#3498db');
+        const fcGauge = createGauge('fc-gauge', 19.8, 20, '#1abc9c');
+
+        // Create cost chart
+        const costCtx = document.getElementById('cost-chart').getContext('2d');
+        const costChart = new Chart(costCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Energy Cost ($)',
+                    data: [45.2, 42.7, 38.9, 41.5, 39.8, 36.2, 42.5],
+                    borderColor: '#27ae60',
+                    backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Daily Energy Cost ($)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Cost ($)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create carbon chart
+        const carbonCtx = document.getElementById('carbon-chart').getContext('2d');
+        const carbonChart = new Chart(carbonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'CO2 Saved (kg)',
+                    data: [180, 210, 195, 230, 245, 200, 190],
+                    backgroundColor: 'rgba(22, 160, 133, 0.7)',
+                    borderColor: '#16a085',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Daily CO2 Savings (kg)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'CO2 (kg)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create maintenance chart
+        const maintenanceCtx = document.getElementById('maintenance-chart').getContext('2d');
+        const maintenanceChart = new Chart(maintenanceCtx, {
+            type: 'radar',
+            data: {
+                labels: ['PV System', 'Wind System', 'Fuel Cell', 'Battery', 'Grid Interface'],
+                datasets: [{
+                    label: 'System Health',
+                    data: [96, 84, 92, 88, 95],
+                    backgroundColor: 'rgba(142, 68, 173, 0.2)',
+                    borderColor: '#8e44ad',
+                    pointBackgroundColor: '#8e44ad',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#8e44ad'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create forecast chart
+        const forecastCtx = document.getElementById('forecast-chart').getContext('2d');
+        const forecastChart = new Chart(forecastCtx, {
+            type: 'line',
+            data: {
+                labels: ['Now', '+1h', '+2h', '+3h', '+4h', '+5h', '+6h', '+7h', '+8h'],
+                datasets: [{
+                    label: 'Energy Forecast (kW)',
+                    data: [53.7, 54.2, 56.8, 58.7, 57.2, 55.4, 52.1, 49.8, 48.3],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#3498db',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Energy Generation Forecast (kW)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'kW'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create weather chart
+        const weatherCtx = document.getElementById('weather-chart').getContext('2d');
+        const weatherChart = new Chart(weatherCtx, {
+            type: 'line',
+            data: {
+                labels: ['6am', '9am', '12pm', '3pm', '6pm', '9pm'],
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: [18, 21, 23, 25, 22, 19],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y',
+                    fill: true
+                },
+                {
+                    label: 'Solar Irradiance (W/m²)',
+                    data: [120, 580, 820, 780, 420, 80],
+                    borderColor: '#f1c40f',
+                    backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y1',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Weather & Solar Conditions'
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Irradiance (W/m²)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create load chart
+        const loadCtx = document.getElementById('load-chart').getContext('2d');
+        const loadChart = new Chart(loadCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Critical', 'Non-Critical', 'Deferrable', 'Sheddable'],
+                datasets: [{
+                    label: 'Load Distribution (kW)',
+                    data: [12.4, 8.7, 5.2, 3.8],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(243, 156, 18, 0.7)',
+                        'rgba(231, 76, 60, 0.7)',
+                        'rgba(230, 126, 34, 0.7)'
+                    ],
+                    borderColor: [
+                        '#2ecc71',
+                        '#f39c12',
+                        '#e74c3c',
+                        '#e67e22'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Load Distribution by Type (kW)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'kW'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create distribution chart
+        const distributionCtx = document.getElementById('distribution-chart').getContext('2d');
+        const distributionChart = new Chart(distributionCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Renewable', 'Fuel Cell', 'Grid Import'],
+                datasets: [{
+                    data: [64.2, 24.7, 11.1],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(26, 188, 156, 极光电竞 0.7)',
+                        'rgba(230, 126, 34, 0.7)'
+                    ],
+                    borderColor: [
+                        '#3498db',
+                        '#1abc9c',
+                        '#e67e22'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Energy Source Distribution (%)'
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Create pricing chart
+        const pricingCtx = document.getElementById('pricing-chart').getContext('2d');
+        const pricingChart = new Chart(pricingCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'Energy Price ($/kWh)',
+                    data: [0.08, 0.08, 0.12, 0.12, 0.28, 0.15],
+                    borderColor: '#d35400',
+                    backgroundColor: 'rgba(211, 84, 0, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Time-of-Use Pricing'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '$/kWh'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create demand forecast chart
+        const demandForecastCtx = document.getElementById('demand-forecast-chart').getContext('2d');
+        const demandForecastChart = new Chart(demandForecastCtx, {
+            type: 'line',
+            data: {
+                labels: ['Now', '+1h', '+2h', '+3h', '+4h', '+5h', '+6h'],
+                datasets: [{
+                    label: 'Demand Forecast (%)',
+                    data: [78, 82, 85, 88, 92, 90, 86],
+                    borderColor: '#c0392b',
+                    backgroundColor: 'rgba(192, 57, 43, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Capacity Utilization Forecast'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 70,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Utilization %'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create storage optimization chart
+        const storageOptimizationCtx = document.getElementById('storage-optimization-chart').getContext('2d');
+        const storageOptimizationChart = new Chart(storageOptimizationCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Cost Saving', 'Peak Shaving', 'Backup', 'Efficiency'],
+                datasets: [{
+                    label: 'Optimization Value',
+                    data: [42.5, 28.3, 15.2, 8.7],
+                    backgroundColor: [
+                        'rgba(155, 89, 182, 0.7)',
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(241, 196, 15, 0.7)'
+                    ],
+                    borderColor: [
+                        '#9b59b6',
+                        '#3498db',
+                        '#2ecc71',
+                        '#f1c40f'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Battery Storage Value'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Value ($)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create efficiency chart
+        const efficiencyCtx = document.getElementById('efficiency-chart').getContext('2d');
+        const efficiencyChart = new Chart(efficiencyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Inverter', 'Transformer', 'Charge Controller', 'VSC System'],
+                datasets: [{
+                    label: 'Efficiency (%)',
+                    data: [96, 92, 94, 89],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(243, 156, 18, 0.7)'
+                    ],
+                    borderColor: [
+                        '#2ecc71',
+                        '#2ecc71',
+                        '#2ecc71',
+                        '#f39c12'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Equipment Efficiency'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 85,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Efficiency %'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create demand response chart
+        const demandResponseCtx = document.getElementById('demand-response-chart').getContext('2d');
+        const demandResponseChart = new Chart(demandResponseCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'DR Events',
+                    data: [3, 2, 4, 3, 2, 2],
+                    borderColor: '#8e44ad',
+                    backgroundColor: 'rgba(142, 68, 173, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Demand Response Events'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Events'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create renewable integration chart
+        const renewableIntegrationCtx = document.getElementById('renewable-integration-chart').getContext('2d');
+        const renewableIntegrationChart = new Chart(renewableIntegrationCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Renewable %',
+                    data: [58, 62, 59, 64, 68, 61, 64],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Renewable Energy Integration'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        max: 70,
+                        title: {
+                            display: true,
+                            text: 'Percentage %'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create power quality chart
+        const powerQualityCtx = document.getElementById('power-quality-chart').getContext('2d');
+        const powerQualityChart = new Chart(powerQualityCtx, {
+            type: 'line',
+            data: {
+                labels: ['10:00', '10:10', '10:20', '10:30', '10:40', '10:50'],
+                datasets: [{
+                    label: 'Voltage THD (%)',
+                    data: [2.0, 2.1, 2.0, 2.2, 2.1, 2.1],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Current THD (%)',
+                    data: [3.2, 3.3, 3.4, 3.3, 3.4, 3.4],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Power Quality Trends'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 1.5,
+                        title: {
+                            display: true,
+                            text: 'THD %'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create historical chart
+        const historicalCtx = document.getElementById('historical-chart').getContext('2d');
+        const historicalChart = new Chart(historicalCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'System Efficiency (%)',
+                    data: [87, 89, 90, 91, 92, 92],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Renewable Integration (%)',
+                    data: [55, 58, 60, 62, 64, 64],
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Historical Performance Trends'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        title: {
+                            display: true,
+                            text: 'Percentage %'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulation functions
+        function updateBatteryLevel(level) {
+            const batteryFill = document.querySelector('.battery-fill');
+            const batteryPercent = document.querySelector('.battery-percent');
+            const batteryStatus = document.querySelector('.status-item:nth-child(3) span');
+            
+            batteryFill.style.height = level + '%';
+            batteryPercent.textContent = level + '%';
+            batteryStatus.textContent = 'Battery: ' + level + '%';
+            
+            // Update status dot color based on level
+            const statusDot = document.querySelector('.status-item:nth-child(3) .status-dot');
+            statusDot.className = 'status-dot';
+            
+            if (level >= 70) {
+                statusDot.classList.add('status-online');
+            } else if (level >= 30) {
+                statusDot.classList.add('status-warning');
+            } else {
+                statusDot.classList.add('status-offline');
+            }
+            
+            addLogEntry('Battery level updated to ' + level + '%', 'info');
+        }
+
+        function simulateFault() {
+            const alertBar = document.querySelector('.alert-bar');
+            alertBar.style.display = 'flex';
+            alertBar.querySelector('.alert-message span').textContent = 'Warning: Simulated grid instability detected. Switching to island mode.';
+            
+            addLogEntry('Simulated grid fault detected. System operating in island mode.', 'warning');
+        }
+
+        function simulateCostChange() {
+            const costValue = document.querySelector('.cost-value');
+            const randomChange = (Math.random() * 0.05 - 0.025).toFixed(3);
+            const newCost = (0.12 + parseFloat(randomChange)).toFixed(2);
+            
+            costValue.textContent = '$' + newCost + '/kWh';
+            
+            addLogEntry('Energy cost changed to $' + newCost + '/kWh', 'info');
+        }
+
+        function simulateCarbonReduction() {
+            const carbonValue = document.querySelector('.carbon-value');
+            const currentCO2 = parseInt(carbonValue.textContent);
+            const newCO2 = currentCO2 + Math.floor(Math.random() * 20) + 5;
+            
+            carbonValue.textContent = newCO2 + ' kg';
+            
+            addLogEntry('CO2 savings increased to ' + newCO2 + ' kg today', 'info');
+        }
+
+        function simulateLoadChange() {
+            const loadValues = document.querySelectorAll('.metric-value');
+            const newValues = [
+                (12.4 + (Math.random() * 2 - 1)).toFixed(1),
+                (8.7 + (Math.random() * 1.5 - 0.75)).toFixed(1),
+                (5.2 + (Math.random() * 1 - 0.5)).toFixed(1),
+                (3.8 + (Math.random() * 0.8 - 0.4)).toFixed(1)
+            ];
+            
+            loadValues.forEach((value, index) => {
+                value.textContent = newValues[index] + ' kW';
+                
+                // Update progress bars
+                const progressFill = value.parentElement.querySelector('.progress-fill');
+                const percentage = (parseFloat(newValues[index]) / (index === 0 ? 20 : 10)) * 100;
+                progressFill.style.width = percentage + '%';
+            });
+            
+            addLogEntry('Load distribution changed due to simulated demand fluctuation', 'info');
+        }
+
+        function simulatePricingChange() {
+            const pricingValues = document.querySelectorAll('.pricing-table td:nth-child(2)');
+            const newValues = [
+                (0.08 + (Math.random() * 0.02 - 0.01)).toFixed(2),
+                (0.12 + (Math.random() * 0.03 - 0.015)).toFixed(2),
+                (0.28 + (Math.random() * 0.05 - 0.025)).toFixed(2),
+                (0.15 + (Math.random() * 0.03 - 0.015)).toFixed(2)
+            ];
+            
+            pricingValues.forEach((value, index) => {
+                value.textContent = newValues[index];
+            });
+            
+            addLogEntry('Time-of-use pricing updated based on market conditions', 'info');
+        }
+
+        function simulateDemandChange() {
+            const demandValue = document.querySelector('.metric-value');
+            const currentDemand = parseInt(demandValue.textContent);
+            const newDemand = currentDemand + Math.floor(Math.random() * 10) - 3;
+            
+            demandValue.textContent = newDemand + '%';
+            
+            addLogEntry('Peak demand forecast updated to ' + newDemand + '%', 'info');
+        }
+
+        function simulateEfficiencyChange() {
+            const efficiencyValues = document.querySelectorAll('.efficiency-value');
+            const newValues = [
+                (96 + (Math.random() * 2 - 1)).toFixed(0),
+                (92 + (Math.random() * 3 - 1.5)).toFixed(0),
+                (94 + (Math.random() * 2 - 1)).toFixed(0),
+                (89 + (Math.random() * 4 - 2)).toFixed(0)
+            ];
+            
+            efficiencyValues.forEach((value, index) => {
+                value.textContent = newValues[index] + '%';
+                
+                // Update efficiency bars
+                const efficiencyBar = value.parentElement.querySelector('.efficiency-bar');
+                efficiencyBar.style.width = newValues[index] + '%';
+                
+                // Update color based on value
+                if (parseInt(newValues[index]) >= 90) {
+                    efficiencyBar.style.background = 'var(--success)';
+                } else if (parseInt(newValues[index]) >= 85) {
+                    efficiencyBar.style.background = 'var(--warning)';
+                } else {
+                    efficiencyBar.style.background = 'var(--accent)';
+                }
+            });
+            
+            addLogEntry('Equipment efficiency metrics updated', 'info');
+        }
+
+        function simulateDREvent() {
+            const drStatus = document.querySelector('.response-status:nth-child(2) .response-icon');
+            drStatus.style.background = 'var(--accent)';
+            drStatus.innerHTML = '<i class="fas fa-bolt"></i>';
+            
+            const drTitle = document.querySelector('.response-status:nth-child(2) .response-title');
+            drTitle.textContent = 'DR Event Active';
+            
+            const drDesc = document.querySelector('.response-status:nth-child(2) .response-desc');
+            drDesc.textContent = '4.2 kW load shed in progress';
+            
+            addLogEntry('Demand response event activated. Shedding 4.2 kW of non-critical load.', 'warning');
+        }
+
+        function addLogEntry(message, type) {
+            const logContainer = document.querySelector('.log-container');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'log-time';
+            timeSpan.textContent = timeString;
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.className = 'log-' + type;
+            messageSpan.textContent = message;
+            
+            logEntry.appendChild(timeSpan);
+            logEntry.appendChild(messageSpan);
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Keep only the last 10 entries
+            if (logContainer.children.length > 10) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // Initialize the dashboard with some random data fluctuations
+        setInterval(() => {
+            // Randomly update some metrics to simulate real-time data
+            if (Math.random() > 0.7) {
+                const pvOutput = document.querySelector('#pv-details p:nth-child(3)');
+                const currentPeak = parseFloat(pvOutput.textContent.split(': ')[1].split(' ')[0]);
+                const newPeak = (currentPeak + (Math.random() * 0.4 - 0.2)).toFixed(1);
+                pvOutput.textContent = 'Peak Today: ' + newPeak + ' kW';
+            }
+            
+            if (Math.random() > 0.7) {
+                const windOutput = document.querySelector('#wind-details p:nth-child(1)');
+                const currentSpeed = parseFloat(windOutput.textContent.split(': ')[1].split(' ')[0]);
+                const newSpeed = (currentSpeed + (Math.random() * 0.8 - 0.4)).toFixed(1);
+                windOutput.textContent = 'Wind Speed: ' + newSpeed + ' m/s';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
